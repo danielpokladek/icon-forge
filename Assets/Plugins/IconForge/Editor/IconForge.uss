@@ -1,0 +1,23 @@
+/* Target the clickable header bar */
+.component-style-foldout > .unity-foldout__toggle {
+    background-color: var(--unity-colors-inspector_titlebar-background);
+    border-top-width: 1px;
+    border-color: var(--unity-colors-inspector_titlebar-border);
+    margin: 0;
+    padding: 2px 4px;
+    -unity-font-style: bold;
+}
+
+/* Add a subtle highlight when hovering over the header */
+.component-style-foldout > .unity-foldout__toggle:hover {
+    background-color: var(--unity-colors-inspector_titlebar-background-hover);
+}
+
+/* Remove the default heavy indentation and add padding for the content */
+.component-style-foldout > .unity-foldout__content {
+    border-top-width: 1px;
+    border-color: var(--unity-colors-inspector_titlebar-border_accent);
+    padding-left: 8px;
+    padding-top: 4px;
+    margin-bottom: 4px;
+}
