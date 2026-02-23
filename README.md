@@ -1,27 +1,28 @@
 # Unity Icon Forge
 
-A simple Unity plugin used for batch creation of icons for prefabs.
+Generate high-quality PNG icons directly from your prefabs, batch render 100+ UI icons in just a few clicks.
 
 ![](./Resources/tool-screenshot.png)
 
 ## Features
 
-- Built using UI Toolkit.
-- Provides settings for camera, lighting, and rendering allowing for icons to be customized.
-- Created with batching in mind, create 100+ icons with one click.
-- Post processor support - run custom logic on the files that have been generated.
+- Built using UI Toolkit for a modern editor experience.
+- Customizable camera, lighting, and render settings.
+- Batch rendering support - generate 100+ icons in one click.
+- Post-processing hooks to run custom logic on generated files.
+- Designed for UI-heavy workflows and production pipelines.
 
 ## Getting Started
 
-### Unity Package
+### Install via Unity Package
 
-You can download the latest [release](https://github.com/danielpokladek/icon-forge/releases), and add it to your project like you would with any other Unity package.
+Download the latest release from the [releases page](https://github.com/danielpokladek/icon-forge/releases) and import it into your project like any Unity package.
 
-### Clone Repository
+### Install via Repository Clone
 
-You can alternatively clone the repository to your device, and copy over the `Assets/Plugins/IconForge/` folder and it's contents to your project.
+Clone this repository and copy contents of `Assets/Plugins/IconForge/` into your project.
 
-You can open the editor window by going to `Tools/IconForge`.
+Open the tool from `Tools -> IconForge`.
 
 ## Contributing
 
