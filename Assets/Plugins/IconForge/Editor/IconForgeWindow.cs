@@ -48,11 +48,11 @@ public class IconForgeWindow : EditorWindow
     private static Vector3 CAMERA_ROTATION = Vector3.zero;
     private static float NEAR_CLIP = 0.01f;
     private static float FAR_CLIP = 100f;
-    private static bool IS_ORTHOGRAPHIC = true;
+    private static bool ORTHOGRAPHIC = true;
 
     private static Vector3 PREFAB_ROTATION = new(0, 90, 0);
     private static int SPRITE_RESOLUTION = 256;
-    private static float SPRITE_PADDING = 1.15f;
+    private static float SPRITE_PADDING = 0.15f;
 
     private static string GetStyleSheetPath(ScriptableObject caller)
     {
@@ -135,14 +135,43 @@ public class IconForgeWindow : EditorWindow
                     return;
                 }
 
-                var settings = new IconForgeSettings
+                FolderSettings folderSettings = new()
                 {
                     PrefabFolder = AssetDatabase.GetAssetPath(PREFAB_FOLDER),
                     OutputFolder = AssetDatabase.GetAssetPath(OUTPUT_FOLDER),
+                };
+
+                CameraSettings cameraSettings = new()
+                {
+                    AllowHDR = ALLOW_HDR,
+                    AllowMSAA = ALLOW_MSAA,
+                    Background = BACKGROUND_COLOR,
+                    FarClip = FAR_CLIP,
+                    NearClip = NEAR_CLIP,
+                    Orthographic = ORTHOGRAPHIC,
+                    Rotation = CAMERA_ROTATION,
+                };
+
+                LightingSettings lightingSettings = new()
+                {
+                    Intensity = LIGHT_INTENSITY,
+                    Rotation = LIGHT_ROTATION,
+                    Shadows = LIGHT_SHADOWS,
+                };
+
+                RenderingSettings renderingSettings = new()
+                {
                     Resolution = SPRITE_RESOLUTION,
                     Padding = SPRITE_PADDING,
-                    Rotation = PREFAB_ROTATION,
-                    IsOrthographic = IS_ORTHOGRAPHIC,
+                    PrefabRotation = PREFAB_ROTATION,
+                };
+
+                var settings = new IconForgeSettings
+                {
+                    FolderSettings = folderSettings,
+                    CameraSettings = cameraSettings,
+                    LightingSettings = lightingSettings,
+                    RenderingSettings = renderingSettings,
                 };
 
                 var results = IconForge.Generate(settings);
@@ -197,7 +226,7 @@ public class IconForgeWindow : EditorWindow
         EditorPrefs.SetFloat(CAMERA_ROTATION_Z_KEY, CAMERA_ROTATION.z);
         EditorPrefs.SetFloat(NEAR_CLIP_KEY, NEAR_CLIP);
         EditorPrefs.SetFloat(FAR_CLIP_KEY, FAR_CLIP);
-        EditorPrefs.SetBool(ORTHOGRAPHIC_KEY, IS_ORTHOGRAPHIC);
+        EditorPrefs.SetBool(ORTHOGRAPHIC_KEY, ORTHOGRAPHIC);
     }
 
     private void LoadSettings()
@@ -222,7 +251,7 @@ public class IconForgeWindow : EditorWindow
 
         // Rendering settings
         SPRITE_RESOLUTION = EditorPrefs.GetInt(RESOLUTION_KEY, 512);
-        SPRITE_PADDING = EditorPrefs.GetFloat(PADDING_KEY, 1.15f);
+        SPRITE_PADDING = EditorPrefs.GetFloat(PADDING_KEY, 0.15f);
         PREFAB_ROTATION = new(
             EditorPrefs.GetFloat(ROTATION_X_KEY, 0f),
             EditorPrefs.GetFloat(ROTATION_Y_KEY, 90f),
@@ -252,7 +281,7 @@ public class IconForgeWindow : EditorWindow
         );
         NEAR_CLIP = EditorPrefs.GetFloat(NEAR_CLIP_KEY, 0.01f);
         FAR_CLIP = EditorPrefs.GetFloat(FAR_CLIP_KEY, 100f);
-        IS_ORTHOGRAPHIC = EditorPrefs.GetBool(ORTHOGRAPHIC_KEY, true);
+        ORTHOGRAPHIC = EditorPrefs.GetBool(ORTHOGRAPHIC_KEY, true);
     }
 
     private void SetupPostProcessorSettings(Foldout parent)
@@ -404,11 +433,11 @@ public class IconForgeWindow : EditorWindow
         );
         parent.Add(allowMSAA);
 
-        var orthographic = new Toggle() { label = "Orthographic", value = IS_ORTHOGRAPHIC };
+        var orthographic = new Toggle() { label = "Orthographic", value = ORTHOGRAPHIC };
         orthographic.RegisterValueChangedCallback(
             (e) =>
             {
-                IS_ORTHOGRAPHIC = e.newValue;
+                ORTHOGRAPHIC = e.newValue;
                 SaveSettings();
             }
         );
@@ -435,6 +464,7 @@ public class IconForgeWindow : EditorWindow
                 SaveSettings();
             }
         );
+        parent.Add(intensity);
 
         var shadows = new DropdownField() { label = "Shadows" };
         shadows.choices.Add("None");
@@ -481,7 +511,13 @@ public class IconForgeWindow : EditorWindow
         );
         parent.Add(spriteResolution);
 
-        var spritePadding = new FloatField() { label = "Sprite Padding", value = SPRITE_PADDING };
+        var spritePadding = new FloatField()
+        {
+            label = "Sprite Padding",
+            value = SPRITE_PADDING,
+            tooltip =
+                "This is a multiplier value - for example, 0.2f will result in 1/5th larger image.",
+        };
         spritePadding.RegisterValueChangedCallback(
             (e) =>
             {

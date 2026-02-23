@@ -7,15 +7,43 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public struct IconForgeSettings
+public struct FolderSettings
 {
     public string PrefabFolder;
     public string OutputFolder;
+}
+
+public struct CameraSettings
+{
+    public Vector3 Rotation;
+    public Color Background;
+    public float NearClip;
+    public float FarClip;
+    public bool AllowHDR;
+    public bool AllowMSAA;
+    public bool Orthographic;
+}
+
+public struct RenderingSettings
+{
+    public Vector3 PrefabRotation;
     public int Resolution;
     public float Padding;
+}
+
+public struct LightingSettings
+{
     public Vector3 Rotation;
-    public bool IsOrthographic;
-    public bool AutoAssignSprites;
+    public LightShadows Shadows;
+    public float Intensity;
+}
+
+public struct IconForgeSettings
+{
+    public FolderSettings FolderSettings;
+    public RenderingSettings RenderingSettings;
+    public LightingSettings LightingSettings;
+    public CameraSettings CameraSettings;
 }
 
 public struct GeneratedSpriteData
@@ -36,13 +64,22 @@ public static class IconForge
         Selection.activeObject = null;
         ActiveEditorTracker.sharedTracker.isLocked = true;
 
-        if (!Directory.Exists(settings.OutputFolder))
+        if (!Directory.Exists(settings.FolderSettings.PrefabFolder))
+        {
+            Debug.LogError($"{_debugPrefix} Something went wrong, and prefab folder is missing!");
+            return null;
+        }
+
+        if (!Directory.Exists(settings.FolderSettings.OutputFolder))
         {
             Debug.LogError($"{_debugPrefix} Something went wrong, and output folder is missing!");
             return null;
         }
 
-        string[] guids = AssetDatabase.FindAssets("t:Prefab", new[] { settings.PrefabFolder });
+        string[] guids = AssetDatabase.FindAssets(
+            "t:Prefab",
+            new[] { settings.FolderSettings.PrefabFolder }
+        );
 
         Scene originalScene = SceneManager.GetActiveScene();
         Scene tempScene = EditorSceneManager.NewScene(
@@ -57,23 +94,20 @@ public static class IconForge
         GameObject lightGO = new("TempLight");
         Light light = lightGO.AddComponent<Light>();
         light.type = LightType.Directional;
-        light.transform.rotation = Quaternion.Euler(50, 30, 0);
-        light.shadows = LightShadows.None;
-        light.intensity = 1.2f;
+        light.transform.rotation = Quaternion.Euler(settings.LightingSettings.Rotation);
+        light.shadows = settings.LightingSettings.Shadows;
+        light.intensity = settings.LightingSettings.Intensity;
 
         GameObject cameraGO = new("TempCamera");
         Camera camera = cameraGO.AddComponent<Camera>();
-
-        camera.allowHDR = false;
-        camera.allowMSAA = false;
-        camera.orthographic = settings.IsOrthographic;
+        camera.allowHDR = settings.CameraSettings.AllowHDR;
+        camera.allowMSAA = settings.CameraSettings.AllowMSAA;
+        camera.orthographic = settings.CameraSettings.Orthographic;
         camera.clearFlags = CameraClearFlags.Color;
-        camera.backgroundColor = Color.clear;
-
+        camera.backgroundColor = settings.CameraSettings.Background;
         camera.transform.rotation = Quaternion.identity;
-
-        camera.nearClipPlane = 0.01f;
-        camera.farClipPlane = 100f;
+        camera.nearClipPlane = settings.CameraSettings.NearClip;
+        camera.farClipPlane = settings.CameraSettings.FarClip;
 
         var results = GenerateSpritesFromGuids(guids, settings, camera);
 
@@ -139,12 +173,12 @@ public static class IconForge
                     continue;
                 }
 
-                go.transform.rotation = Quaternion.Euler(settings.Rotation);
+                go.transform.rotation = Quaternion.Euler(settings.RenderingSettings.PrefabRotation);
 
                 string relativeSpritePath = GetRelativeSpritePath(
                     path,
-                    settings.PrefabFolder,
-                    settings.OutputFolder
+                    settings.FolderSettings.PrefabFolder,
+                    settings.FolderSettings.OutputFolder
                 );
 
                 string? directory = Path.GetDirectoryName(relativeSpritePath);
@@ -154,7 +188,13 @@ public static class IconForge
                     Directory.CreateDirectory(directory);
                 }
 
-                CreateSprite(go, camera, relativeSpritePath, settings.Resolution, settings.Padding);
+                CreateSprite(
+                    go,
+                    camera,
+                    relativeSpritePath,
+                    settings.RenderingSettings.Resolution,
+                    1 + settings.RenderingSettings.Padding
+                );
 
                 Object.DestroyImmediate(go);
 
@@ -228,7 +268,7 @@ public static class IconForge
         try
         {
             var files = Directory.GetFiles(
-                settings.OutputFolder,
+                settings.FolderSettings.OutputFolder,
                 "*.png",
                 SearchOption.AllDirectories
             );
@@ -245,7 +285,7 @@ public static class IconForge
 
                 importer.textureType = TextureImporterType.Sprite;
                 importer.spriteImportMode = SpriteImportMode.Single;
-                importer.spritePixelsPerUnit = settings.Resolution;
+                importer.spritePixelsPerUnit = settings.RenderingSettings.Resolution;
                 importer.alphaIsTransparency = true;
 
                 assetsToReserialize.Add(file);
